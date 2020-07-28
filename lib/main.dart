@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quizzler/done.dart';
 import 'package:quizzler/question.dart';
 
 void main() => runApp(Quizzler());
@@ -7,14 +8,27 @@ class Quizzler extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      initialRoute: '/',
+      routes: {
+        // When navigating to the "/" route, build the FirstScreen widget.
+        '/': (context) => FirstScreen(),
+        // When navigating to the "/second" route, build the SecondScreen widget.
+        '/done': (context) => Done(),
+      },
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.grey.shade900,
-        body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.0),
-            child: QuizPage(),
-          ),
+    );
+  }
+}
+
+class FirstScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade900,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10.0),
+          child: QuizPage(),
         ),
       ),
     );
@@ -30,6 +44,13 @@ class _QuizPageState extends State<QuizPage> {
   List<Icon> scoreKeeper = [];
   List<Question> questions = [];
   int questionNum = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    Question.generateQuestions(questions);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +89,7 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 //The user picked true.
+                checkAnswer(true);
               },
             ),
           ),
@@ -86,6 +108,7 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 //The user picked false.
+                checkAnswer(false);
               },
             ),
           ),
@@ -96,6 +119,40 @@ class _QuizPageState extends State<QuizPage> {
         ),
       ],
     );
+  }
+
+  void _addCorrectAnswer() {
+    scoreKeeper.add(
+      Icon(
+        Icons.check,
+        color: Colors.green,
+      ),
+    );
+  }
+
+  void _addWrongAnswer() {
+    scoreKeeper.add(
+      Icon(
+        Icons.close,
+        color: Colors.red,
+      ),
+    );
+  }
+
+  void checkAnswer(bool answer) {
+    setState(() {
+      if (questions[questionNum].answer == answer) {
+        _addCorrectAnswer();
+      } else {
+        _addWrongAnswer();
+      }
+      questionNum++;
+      if (questionNum == questions.length) {
+        questionNum = 0;
+        scoreKeeper.clear();
+        Navigator.pushNamed(context, '/done');
+      }
+    });
   }
 }
 
