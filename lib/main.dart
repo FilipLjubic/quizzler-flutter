@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quizzler/done.dart';
-import 'package:quizzler/question.dart';
+import 'package:quizzler/quiz_brain.dart';
 
 void main() => runApp(Quizzler());
 
@@ -12,7 +12,7 @@ class Quizzler extends StatelessWidget {
       routes: {
         // When navigating to the "/" route, build the FirstScreen widget.
         '/': (context) => FirstScreen(),
-        // When navigating to the "/second" route, build the SecondScreen widget.
+        // When navigating to the "/second" route, build the Done widget.
         '/done': (context) => Done(),
       },
       debugShowCheckedModeBanner: false,
@@ -42,15 +42,8 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   List<Icon> scoreKeeper = [];
-  List<Question> questions = [];
   int questionNum = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    Question.generateQuestions(questions);
-  }
+  final QuizBrain quizBrain = QuizBrain();
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +57,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                questions[questionNum].question,
+                quizBrain.getQuestion(questionNum),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -89,7 +82,12 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 //The user picked true.
-                checkAnswer(true);
+                setState(() {
+                  if (quizBrain.checkAnswer(scoreKeeper, true) == false) {
+                    scoreKeeper.clear();
+                    Navigator.pushNamed(context, '/done');
+                  }
+                });
               },
             ),
           ),
@@ -108,7 +106,13 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 //The user picked false.
-                checkAnswer(false);
+                //if there are no more questions change screen
+                setState(() {
+                  if (quizBrain.checkAnswer(scoreKeeper, true) == false) {
+                    scoreKeeper.clear();
+                    Navigator.pushNamed(context, '/done');
+                  }
+                });
               },
             ),
           ),
@@ -119,40 +123,6 @@ class _QuizPageState extends State<QuizPage> {
         ),
       ],
     );
-  }
-
-  void _addCorrectAnswer() {
-    scoreKeeper.add(
-      Icon(
-        Icons.check,
-        color: Colors.green,
-      ),
-    );
-  }
-
-  void _addWrongAnswer() {
-    scoreKeeper.add(
-      Icon(
-        Icons.close,
-        color: Colors.red,
-      ),
-    );
-  }
-
-  void checkAnswer(bool answer) {
-    setState(() {
-      if (questions[questionNum].answer == answer) {
-        _addCorrectAnswer();
-      } else {
-        _addWrongAnswer();
-      }
-      questionNum++;
-      if (questionNum == questions.length) {
-        questionNum = 0;
-        scoreKeeper.clear();
-        Navigator.pushNamed(context, '/done');
-      }
-    });
   }
 }
 
